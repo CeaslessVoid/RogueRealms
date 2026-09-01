@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2152768daef4e854991878eb3af89aa7, type: 3}
+  m_Name: Head_Female_Average_Average
+  m_EditorClassIdentifier: Assembly-CSharp::RogueRealms.HeadTypeDef
+  defName: Head_Female_Average_Average
+  gender: 1
+  sprites:
+    north: {fileID: -2838020990684231060, guid: 565ad5a283352bc4495bd75695c4f7bd, type: 3}
+    east: {fileID: -7202297453596187977, guid: 6c6c7726c5b7c974d84878dd9cb587bc, type: 3}
+    south: {fileID: -1261422636390305329, guid: 72a96edfece53ba479e32133fcdab23e, type: 3}
+    west: {fileID: 0}
