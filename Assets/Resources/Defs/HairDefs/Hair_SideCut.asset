@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f205c347b1871f4f995fa652a13cdd2, type: 3}
+  m_Name: Hair_SideCut
+  m_EditorClassIdentifier: Assembly-CSharp::RogueRealms.HairDef
+  defName: Hair_SideCut
+  displayName: Side Cut
+  description: 
+  sprites:
+    north: {fileID: -159390353233827495, guid: f8bb7eae195a6e84cb4c668ddc864178, type: 3}
+    east: {fileID: 6365575296228499435, guid: a7d129a4126b466488cb76cfdb0336e3, type: 3}
+    south: {fileID: -5018747651187969756, guid: eba12a2edbd39e742805a9ebda19918d, type: 3}
+    west: {fileID: 0}

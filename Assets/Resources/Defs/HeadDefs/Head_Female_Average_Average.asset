@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Head_Female_Average_Average
   m_EditorClassIdentifier: Assembly-CSharp::RogueRealms.HeadTypeDef
   defName: Head_Female_Average_Average
+  displayName: Female Average Average
+  description: 
   gender: 1
   sprites:
     north: {fileID: -2838020990684231060, guid: 565ad5a283352bc4495bd75695c4f7bd, type: 3}

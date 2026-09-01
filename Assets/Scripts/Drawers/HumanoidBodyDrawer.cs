@@ -18,8 +18,18 @@ namespace RogueRealms
 
         Direction currentFacing = Direction.South;
 
+        Vector3 headBasePos;
+        Vector3 hairBasePos;
+        Vector3 headClothingBasePos;
+
+        const float HeadSideOffset = 0.05f;
+
         void Awake()
         {
+            headBasePos = headRenderer.transform.localPosition;
+            hairBasePos = hairRenderer.transform.localPosition;
+            headClothingBasePos = headClothingRenderer.transform.localPosition;
+
             if (bodySprites == null) SetBody(DefDatabase<BodyTypeDef>.Random());
             if (headSprites == null) SetHead(DefDatabase<HeadTypeDef>.Random());
         }
@@ -83,6 +93,15 @@ namespace RogueRealms
             Apply(hairRenderer, hairSprites);
             Apply(bodyClothingRenderer, bodyClothingSprites);
             Apply(headClothingRenderer, headClothingSprites);
+            ApplyHeadOffset(dir);
+        }
+
+        void ApplyHeadOffset(Direction dir)
+        {
+            float x = dir == Direction.East ? HeadSideOffset : dir == Direction.West ? -HeadSideOffset : 0f;
+            headRenderer.transform.localPosition = headBasePos + new Vector3(x, 0f, 0f);
+            hairRenderer.transform.localPosition = hairBasePos + new Vector3(x, 0f, 0f);
+            headClothingRenderer.transform.localPosition = headClothingBasePos + new Vector3(x, 0f, 0f);
         }
 
         void Apply(SpriteRenderer sr, DirectionalSprites sprites)

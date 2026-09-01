@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Body_Humalike_Female
   m_EditorClassIdentifier: Assembly-CSharp::RogueRealms.BodyTypeDef
   defName: Body_Humalike_Female
+  displayName: Female
+  description: 
   sprites:
     north: {fileID: 5484194649517512279, guid: 8ef3314c6a42d244988d453c21f71d7e, type: 3}
     east: {fileID: -2845295789423956779, guid: 9dc9258823cb03943a68c648d160a194, type: 3}

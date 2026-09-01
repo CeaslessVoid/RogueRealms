@@ -9,7 +9,7 @@ namespace RogueRealms
         public int currentHealth;
 
         public int speed = 20;
-        public float speedScale = 0.1f;
+        protected float speedScale = 0.1f;
 
         public float CurrentMoveSpeed => speed * speedScale;
         public bool IsDead => currentHealth <= 0;
