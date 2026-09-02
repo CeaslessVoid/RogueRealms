@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f534a992e76cd084bbe0b4d589865590, type: 3}
+  m_Name: Body_Humalike_Thin
+  m_EditorClassIdentifier: Assembly-CSharp::RogueRealms.BodyTypeDef
+  defName: Body_Humalike_Thin
+  displayName: Thin
+  description: 
+  sprites:
+    north: {fileID: -8028703863591259110, guid: a10b31a249a50074ba592313197d8665, type: 3}
+    east: {fileID: 8609480426463721226, guid: e7673d17e924c874ea344b2e65d82713, type: 3}
+    south: {fileID: -4192975943799930533, guid: ade789fd9cdb0644e91b5a469720844e, type: 3}
+    west: {fileID: 0}

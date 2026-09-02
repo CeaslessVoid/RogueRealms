@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f534a992e76cd084bbe0b4d589865590, type: 3}
+  m_Name: Body_Humalike_Fat
+  m_EditorClassIdentifier: Assembly-CSharp::RogueRealms.BodyTypeDef
+  defName: Body_Humalike_Fat
+  displayName: Fat
+  description: 
+  sprites:
+    north: {fileID: -6661230073375696014, guid: 9a5e70d57a0126545a6bea3d949f818d, type: 3}
+    east: {fileID: -1274663921478503006, guid: 00d3aa93f12cb584ba495e711c48c8dc, type: 3}
+    south: {fileID: -134991803653234035, guid: dd12c1d2108fb0e44b1d73654c06db1e, type: 3}
+    west: {fileID: 0}

@@ -34,6 +34,9 @@ namespace RogueRealms
                 CharacterProfile.hair = DefDatabase<HairDef>.Random();
             }
 
+            if (CharacterProfile.body == null) CharacterProfile.body = DefDatabase<BodyTypeDef>.Random();
+            if (CharacterProfile.head == null) CharacterProfile.head = DefDatabase<HeadTypeDef>.Random();
+
             if (CharacterProfile.body == null) Debug.LogWarning("[CharacterSaveService] No BodyTypeDef found under Resources/Defs.");
             if (CharacterProfile.head == null) Debug.LogWarning("[CharacterSaveService] No HeadTypeDef found under Resources/Defs.");
         }
