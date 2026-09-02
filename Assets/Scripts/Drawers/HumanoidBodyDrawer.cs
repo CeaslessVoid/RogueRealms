@@ -29,9 +29,6 @@ namespace RogueRealms
             headBasePos = headRenderer.transform.localPosition;
             hairBasePos = hairRenderer.transform.localPosition;
             headClothingBasePos = headClothingRenderer.transform.localPosition;
-
-            if (bodySprites == null) SetBody(DefDatabase<BodyTypeDef>.Random());
-            if (headSprites == null) SetHead(DefDatabase<HeadTypeDef>.Random());
         }
 
         public void SetBody(BodyTypeDef def)
@@ -106,6 +103,7 @@ namespace RogueRealms
 
         void Apply(SpriteRenderer sr, DirectionalSprites sprites)
         {
+
             if (sr == null || sprites == null) return;
             sr.sprite = sprites.GetSprite(currentFacing, out bool flip);
             sr.flipX = flip;

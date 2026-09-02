@@ -7,6 +7,7 @@ namespace RogueRealms
     {
         public void PlayGame()
         {
+            CharacterSaveService.Save();
             SceneManager.LoadScene("Game");
         }
     }

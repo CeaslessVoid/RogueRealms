@@ -15,6 +15,8 @@ namespace RogueRealms
 
         void Start()
         {
+            CharacterSaveService.EnsureProfileLoaded();
+
             classes = new List<ClassDef>(DefDatabase<ClassDef>.All());
 
             foreach (var def in classes)
@@ -23,7 +25,11 @@ namespace RogueRealms
                 item.Setup(def, OnClassPicked);
             }
 
-            if (classes.Count > 0) Select(0);
+            if (classes.Count == 0) return;
+
+            int startIndex = CharacterProfile.selectedClass != null ? classes.IndexOf(CharacterProfile.selectedClass) : 0;
+            if (startIndex < 0) startIndex = 0;
+            Select(startIndex);
         }
 
         void OnClassPicked(ClassDef def)
