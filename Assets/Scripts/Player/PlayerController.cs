@@ -6,12 +6,14 @@ namespace RogueRealms
     public class PlayerController : MonoBehaviour
     {
         PlayerEntity entity;
+        PlayerDash dash;
         Camera cam;
         Vector2 moveInput;
 
         void Awake()
         {
             entity = GetComponent<PlayerEntity>();
+            dash = GetComponent<PlayerDash>();
             cam = Camera.main;
         }
 
@@ -24,6 +26,7 @@ namespace RogueRealms
 
         void FixedUpdate()
         {
+            if (dash != null && dash.IsDashing) return;
             entity.Move(moveInput);
         }
 

@@ -10,5 +10,6 @@ namespace RogueRealms
         public List<PassiveDef> passives = new List<PassiveDef>();
         public List<SkillDef> skills = new List<SkillDef>();
         public List<ClothingDef> defaultClothing = new List<ClothingDef>();
+        public List<WeaponDef> startingWeapons = new List<WeaponDef>();
     }
 }

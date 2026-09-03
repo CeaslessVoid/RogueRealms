@@ -24,6 +24,8 @@ namespace RogueRealms
             drawer.SetBody(CharacterProfile.body);
             drawer.SetHead(CharacterProfile.head);
             drawer.SetHair(CharacterProfile.hair);
+            drawer.SetSkinTone(CharacterProfile.skinTone);
+            drawer.SetHairColor(CharacterProfile.hairColor);
 
             if (CharacterProfile.selectedClass != null)
             {

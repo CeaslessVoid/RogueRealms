@@ -50,6 +50,18 @@ namespace RogueRealms
             Apply(hairRenderer, hairSprites);
         }
 
+        public void SetSkinTone(SkinToneDef def)
+        {
+            var color = def != null ? def.color : Color.white;
+            bodyRenderer.color = color;
+            headRenderer.color = color;
+        }
+
+        public void SetHairColor(HairColorDef def)
+        {
+            hairRenderer.color = def != null ? def.color : Color.white;
+        }
+
         public void SetClothing(ClothingDef def)
         {
             if (def == null) return;
@@ -103,7 +115,6 @@ namespace RogueRealms
 
         void Apply(SpriteRenderer sr, DirectionalSprites sprites)
         {
-
             if (sr == null || sprites == null) return;
             sr.sprite = sprites.GetSprite(currentFacing, out bool flip);
             sr.flipX = flip;
