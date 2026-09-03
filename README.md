@@ -1,59 +1,98 @@
 # RogueRealms
 
-## Implemented so far
+Full record of what's implemented and how it's wired. Updated in place every patch - always the whole picture, not a diff.
 
-**Core**
-- Entity (abstract): move via Rigidbody2D, tracks facing, holds stats via `BaseStats`
-- EntityStats: maxHealth, currentHealth, speed (int), speedScale
-- EnemyStats : EntityStats + damageMultiplier
-- PlayerStats : EntityStats + strength, range, wisdom, hope, defense, critChance (uncapped), dodge — all attributes default 0, speed defaults 20 (inherited)
-- Direction / DirectionalSprites: N/E/S + auto-flip West
-- IBodyDrawer: shared interface for Animal/Humanoid drawers
+## Core
+- **Entity** (abstract): moves via Rigidbody2D (`Move(dir)`), tracks `FacingDirection`, exposes stats through abstract `BaseStats`. `Awake()` finds its body drawer and Rigidbody2D; `Start()` pushes the initial facing (deliberately in Start, not Awake - see Drawers below for why).
+- **EntityStats**: maxHealth, currentHealth, speed (int), speedScale. `CurrentMoveSpeed = speed * speedScale`. `TakeDamage`/`Heal`/`InitializeDefaults`.
+- **EnemyStats : EntityStats** + damageMultiplier.
+- **PlayerStats : EntityStats** + strength, range, wisdom, hope, defense, critChance (float, uncapped), dodge, dashCooldown (5), dashDistance (3), dashDuration (0.15). All attribute stats default 0; speed defaults 20 (inherited). Every dash number lives here, not on any component.
+- **Direction / DirectionalSprites**: N/E/S sprites + optional explicit West, otherwise West = East flipped.
+- **IBodyDrawer**: interface both AnimalBodyDrawer and HumanoidBodyDrawer implement.
 
-**Entities**
-- PlayerEntity : Entity, uses PlayerStats
-- EnemyEntity : Entity, uses EnemyStats
-- Body type (animal vs humanoid) is just whichever drawer sits on the entity's child, not a class
+## Entities
+- **PlayerEntity : Entity** - `public PlayerStats stats`, `BaseStats => stats`.
+- **EnemyEntity : Entity** - `public EnemyStats stats`, `BaseStats => stats`.
+- Body type (animal vs humanoid) isn't a class - it's just whichever drawer component sits on the entity's child. Both entity types work with either drawer.
 
-**Defs**
-- Def (base): defName, displayName, description
-- DefDatabase<T>: load/lookup/cached random pick from Resources/Defs
-- HairDef, BodyTypeDef, HeadTypeDef, ClothingDef (Body/Head slot)
-- ClassDef: baseStats (PlayerStats, defaults 0/speed 20), passives, skills, defaultClothing
-- PassiveDef, SkillDef: stub defs, name/desc/icon only
+## Defs
+RimWorld-style: `Def` (base ScriptableObject) has defName, displayName, description. `DefDatabase<T>` lazy-loads every asset of type T from any `Resources/Defs` folder, indexed by defName, with cached lookup/random-pick.
 
-**Drawers**
-- AnimalBodyDrawer: 1 sprite layer
-- HumanoidBodyDrawer: 5 layers (Body, BodyClothing, Head, Hair, HeadClothing)
-- Head, Hair, HeadClothing shift ±0.5 on X facing East/West, 0 on North/South. Body/BodyClothing don't shift.
-- **Changed:** HumanoidBodyDrawer no longer randomizes its own body/head on Awake. It's a dumb display component now — whatever calls SetBody/SetHead/SetHair/SetClothing controls what it shows. See PlayerAppearanceController below.
+- **HairDef**: DirectionalSprites.
+- **BodyTypeDef**: DirectionalSprites (Male/Female/Fat/Hulk/Thin etc).
+- **HeadTypeDef**: HeadGender + DirectionalSprites.
+- **ClothingDef**: ClothingSlot (Body/Head) + DirectionalSprites.
+- **SkinToneDef / HairColorDef**: just a Color, no sprites.
+- **ClassDef**: baseStats (PlayerStats), passives (List<PassiveDef>), skills (List<SkillDef>), defaultClothing (List<ClothingDef>), startingWeapons (List<WeaponDef>).
+- **PassiveDef / SkillDef**: stub - displayName/description/icon only, no behavior yet.
+- **WeaponDef**: type (Melee/Ranged/Magic/Consumable), sprite (single, drawn pointing right or on a diagonal), spriteAngleOffset (degrees the art is drawn at, so aiming math can correct for it). No usage/effects implemented - display and inventory only.
 
-**Player**
-- PlayerController: WASD move, faces mouse, sprite never rotates
+## Drawers
+- **AnimalBodyDrawer**: one SpriteRenderer, N/E/S + auto-flip West.
+- **HumanoidBodyDrawer**: 5 layered SpriteRenderers - Body, BodyClothing, Head, Hair, HeadClothing. Independently swappable (SetBody/SetHead/SetHair/SetClothing/ClearClothing).
+  - Head, Hair, HeadClothing shift on X when facing East/West (currently **±0.05**, tuned locally - don't reset this to 0.5). Body/BodyClothing never shift.
+  - `SetSkinTone(SkinToneDef)` tints Body + Head renderers. `SetHairColor(HairColorDef)` tints Hair only. Both are plain multiply tints (`SpriteRenderer.color`) - black outlines stay black for free, but the source art needs to be white/grayscale fill + black outline for this to work; art with actual colored pixels will multiply against that color instead.
+  - It's a dumb display component - doesn't randomize or load anything itself. `PlayerAppearanceController` (below) is what actually populates it.
 
-**Menu**
-- CharacterProfile: static holder for the current body/head/hair/class, in memory for the session
-- CharacterSaveService: PlayerPrefs-backed save/load for CharacterProfile.
-  - `EnsureProfileLoaded()` - call-once-per-session. Loads from PlayerPrefs if a save exists, otherwise randomizes body/head/hair (first launch case) and leaves it in CharacterProfile without writing to disk yet.
-  - `Save()` - writes current CharacterProfile to PlayerPrefs. Called by MainMenuController when Play is pressed.
-- PlayerAppearanceController: applies CharacterProfile (loading/randomizing it first if needed) to whatever HumanoidBodyDrawer is in its children, plus the selected class's default clothing. Used on **both** the menu's CharacterPreview and the Game scene's Player - this is what actually makes them show up now.
-- MainMenuController: Play button → saves the profile → loads "Game" scene
-- ClassSelectorUI: builds the class scrollview, loads the profile first so it reselects whatever class was picked last time (falls back to the first class if none saved), Next()/Previous() for arrow buttons, drives description panel + preview
-- ClassListItemButton, ClassDescriptionPanel, CharacterPreviewDisplay, CharacterEditorController, DefListItemButton, HairSelectorUI, BodySelectorUI, HeadSelectorUI: unchanged from last patch
+## Player & Camera (Game scene)
+- **PlayerController**: WASD move, faces the mouse (bucketed N/E/S/W, sprite never rotates), and now also owns dash (Space bar - see below). One script, no separate dash component.
+  - Dash direction: current WASD input if moving, otherwise toward the mouse.
+  - Moves over `dashDuration` seconds covering `dashDistance` units, then starts `dashCooldown`. Normal WASD movement is skipped for the duration of a dash so they don't fight over the Rigidbody.
+  - Drives an optional `DashCooldownUI` if assigned.
+- **CameraController**: follows the player, leans toward the mouse (clamped, not 1:1 distance), zooms with scroll wheel (orthographicSize).
+
+## Weapons (display + inventory only, no usage/effects)
+- **WeaponInventory**: 5 slots, filled from the selected class's startingWeapons on Start, `SelectSlot`/`NextSlot`/`PreviousSlot`, fires `OnChanged`.
+- **WeaponInputController**: number keys 1-5 select a slot directly. (Scroll wheel isn't used for this - it's reserved for camera zoom, see below.)
+- **WeaponHolder**: positions the current weapon out from the player toward the mouse (orbits at a fixed distance, not a static offset), rotates to face the mouse, subtracts `spriteAngleOffset` so diagonally-drawn art still points true, flips vertically (`flipY`) whenever the mouse is left of the player.
+- **WeaponSlotUI**: one HUD slot - icon + name, scales up when it's the active slot.
+- **WeaponHudController**: drives all 5 WeaponSlotUI from the inventory.
+
+**Input conflict note:** slot switching was asked to work via number keys *or* scrolling, and the camera was asked to zoom - scroll can't do both. Scroll drives camera zoom; slots are number-keys-only.
+
+## Menu & character creation (MainMenu scene)
+- **CharacterProfile**: static holder - body, head, hair, skinTone, hairColor, selectedClass. Lives in memory for the session, survives the scene load into Game since it's just a static class.
+- **CharacterSaveService**: PlayerPrefs-backed.
+  - `EnsureProfileLoaded()` - call-once-per-session guard. Loads from PlayerPrefs if a save exists; if any saved def can't be resolved (renamed/deleted asset), self-heals with a fresh random pick instead of leaving it null. First launch (no save at all) randomizes body/head/hair/skinTone/hairColor.
+  - `Save()` - writes CharacterProfile to PlayerPrefs. Called by MainMenuController when Play is pressed - this is the only thing that transfers character data into the Game scene.
+- **PlayerAppearanceController**: applies CharacterProfile (loading/randomizing first if needed) to whatever HumanoidBodyDrawer is in its children - body, head, hair, skin tone, hair color, and the selected class's default clothing. Used on **both** the menu's CharacterPreview and the Game scene's Player.
+- **MainMenuController**: Play button → `CharacterSaveService.Save()` → loads "Game" scene.
+- **ClassSelectorUI**: builds the class scrollview from DefDatabase<ClassDef>, loads the profile first so it reselects whatever class was picked last time (falls back to index 0), `Next()`/`Previous()` for arrow buttons, drives the description panel + character preview.
+- **ClassListItemButton**: one row in the class scrollview.
+- **ClassDescriptionPanel**: right-side name + description display.
+- **CharacterPreviewDisplay**: the character shown in the middle of the menu; wears the selected class's clothing; clicking it opens the character editor (`OnMouseDown`, needs a Collider2D).
+- **CharacterEditorController**: shows/hides editor vs class-selection panels; `Spin()` cycles S→E→N→W on the preview; `Exit()` returns to class selection.
+- **DefListItemButton**: reusable list button (N/E/S preview images + name), used by Hair/Body/Face tabs.
+- **HairSelectorUI / BodySelectorUI / HeadSelectorUI**: scrollview + search bar per Def type, applies selection live to the preview drawer + CharacterProfile.
+- **ColorSwatchButton**: a button that's just a colored square, used by the tone/color tabs.
+- **SkinToneSelectorUI / HairColorSelectorUI**: scrollview (no search - there usually aren't many colors) of ColorSwatchButton, same live-apply pattern.
+
+## UI widgets
+- **DashCooldownUI**: two stacked Images - a static gray one behind, a full-color one in front set to Filled/Horizontal/Left in code. Fill drops to 0 on dash, refills left-to-right as cooldown counts down - the icon itself "fills up", not a separate bar. Timer text shows remaining seconds to 1 decimal, blank when ready.
+
+## Prefabs / scene objects
+- **Player** (Game scene): Rigidbody2D (Kinematic, gravity 0) + PlayerEntity + PlayerController (cooldownUI assigned) + PlayerAppearanceController + WeaponInventory + WeaponInputController. Child with HumanoidBodyDrawer and its 5 SpriteRenderers (Body, BodyClothing, Head, Hair, HeadClothing). Separate child `WeaponAnchor` with SpriteRenderer + WeaponHolder (player = the root transform).
+- **Main Camera** (Game scene): CameraController, target = Player.
+- **CharacterPreview** (MainMenu scene): HumanoidBodyDrawer (same 5-renderer setup) + Collider2D + CharacterPreviewDisplay + PlayerAppearanceController.
+- **ClassItemPrefab**: Button + TMP_Text + ClassListItemButton, instantiated into the class scrollview.
+- **DefListItemButton prefab**: Button + 3 Images (N/E/S) + TMP_Text, reused for Hair/Body/Face tabs.
+- **ColorSwatchButton prefab**: Button + Image, reused for Skin Tone/Hair Color tabs.
+- **WeaponSlotUI prefab**: Image (icon) + TMP_Text, instantiated ×5 for the weapon HUD.
+- **Dash icon**: two overlapping Image GameObjects (gray + color) + a TMP_Text timer, driven by one DashCooldownUI.
 
 ## Character persistence
-- Body, head, and hair are saved permanently (PlayerPrefs) - same character every time you launch the game, after the first launch (which randomizes body/head/hair, no head randomization was skipped - it's included too, since a head-less character isn't playable).
-- Class is also remembered as "last picked", but you can always change it in the menu before hitting Play - it's not locked in.
-- Nothing else persists. No stats, no items, no run progress - true roguelike, character identity only.
+Body, head, hair, skin tone, and hair color are saved permanently via PlayerPrefs - same character every launch after the first (which randomizes all of them). Class is remembered as "last picked" but always changeable before Play. Nothing else persists - no stats, items, or run progress. True roguelike: character identity only.
 
 ## Scenes
-- **MainMenu**: class select, character preview, character editor
-- **Game**: currently just the test player, no enemies yet
+- **MainMenu**: class select, character preview, character editor.
+- **Game**: player, camera, weapon holding/HUD, dash. Still no enemies.
 
-See Setup.md for wiring both scenes, including the new PlayerAppearanceController placement.
+See Setup.md for wiring steps (only for what's new/changed in the latest patch - older wiring isn't repeated once it's done).
 
 ## Performance
-- SetFacing early-outs on unchanged direction
-- DefDatabase caches lookups + a flat list for random picks
-- List filtering (search bars) only runs on text change, not per-frame
-- No code comments — documentation lives here instead
+- SetFacing early-outs on unchanged direction.
+- DefDatabase caches lookups + a flat list for random picks.
+- Skin tone / hair color tinting is a color set, not a shader - free.
+- List filtering (search bars) only runs on text change, not per-frame.
+- Weapon holding / camera follow / dash are plain per-frame math, no allocations, no GetComponent in Update.
+- No code comments — documentation lives here instead.
