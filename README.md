@@ -26,16 +26,17 @@ RimWorld-style: `Def` (base ScriptableObject) has defName, displayName, descript
 - **ClassDef**: baseStats (PlayerStats), passives (List<PassiveDef>), skills (List<SkillDef>), defaultClothing (List<ClothingDef>), startingWeapons (List<WeaponDef>).
 - **PassiveDef / SkillDef**: stub - displayName/description/icon only, no behavior yet.
 - **WeaponDef**: type (Melee/Ranged/Magic/Consumable), sprite (single, drawn pointing right or on a diagonal), spriteAngleOffset (degrees the art is drawn at, so aiming math can correct for it). No usage/effects implemented - display and inventory only.
+- **MapDef**: width, height (in tiles), tileSize. Just a size - see Map below.
 
 ## Drawers
 - **AnimalBodyDrawer**: one SpriteRenderer, N/E/S + auto-flip West.
 - **HumanoidBodyDrawer**: 5 layered SpriteRenderers - Body, BodyClothing, Head, Hair, HeadClothing. Independently swappable (SetBody/SetHead/SetHair/SetClothing/ClearClothing).
   - Head, Hair, HeadClothing shift on X when facing East/West (currently **±0.05**, tuned locally - don't reset this to 0.5). Body/BodyClothing never shift.
   - `SetSkinTone(SkinToneDef)` tints Body + Head renderers. `SetHairColor(HairColorDef)` tints Hair only. Both are plain multiply tints (`SpriteRenderer.color`) - black outlines stay black for free, but the source art needs to be white/grayscale fill + black outline for this to work; art with actual colored pixels will multiply against that color instead.
-  - It's a dumb display component - doesn't randomize or load anything itself. `PlayerAppearanceController` (below) is what actually populates it.
+  - It's a dumb display component - doesn't randomize or load anything itself. `PlayerAppearanceController` is what actually populates it.
 
 ## Player & Camera (Game scene)
-- **PlayerController**: WASD move, faces the mouse (bucketed N/E/S/W, sprite never rotates), and now also owns dash (Space bar - see below). One script, no separate dash component.
+- **PlayerController**: WASD move, faces the mouse (bucketed N/E/S/W, sprite never rotates), and owns dash (Space bar). One script, no separate dash component.
   - Dash direction: current WASD input if moving, otherwise toward the mouse.
   - Moves over `dashDuration` seconds covering `dashDistance` units, then starts `dashCooldown`. Normal WASD movement is skipped for the duration of a dash so they don't fight over the Rigidbody.
   - Drives an optional `DashCooldownUI` if assigned.
@@ -43,12 +44,20 @@ RimWorld-style: `Def` (base ScriptableObject) has defName, displayName, descript
 
 ## Weapons (display + inventory only, no usage/effects)
 - **WeaponInventory**: 5 slots, filled from the selected class's startingWeapons on Start, `SelectSlot`/`NextSlot`/`PreviousSlot`, fires `OnChanged`.
-- **WeaponInputController**: number keys 1-5 select a slot directly. (Scroll wheel isn't used for this - it's reserved for camera zoom, see below.)
+- **WeaponInputController**: number keys 1-5 select a slot directly. (Scroll wheel isn't used for this - it's reserved for camera zoom.)
 - **WeaponHolder**: positions the current weapon out from the player toward the mouse (orbits at a fixed distance, not a static offset), rotates to face the mouse, subtracts `spriteAngleOffset` so diagonally-drawn art still points true, flips vertically (`flipY`) whenever the mouse is left of the player.
 - **WeaponSlotUI**: one HUD slot - icon + name, scales up when it's the active slot.
 - **WeaponHudController**: drives all 5 WeaponSlotUI from the inventory.
 
 **Input conflict note:** slot switching was asked to work via number keys *or* scrolling, and the camera was asked to zoom - scroll can't do both. Scroll drives camera zoom; slots are number-keys-only.
+
+## Map
+- **MapDef**: width, height, tileSize - the play area's size limit. Just data.
+- **MapManager**: holds a MapDef + an origin point. `GetBounds()`/`Contains(worldPos)` for later use (nothing clamps to it yet - just defined and visible for now). Draws the boundary two ways:
+  - A `LineRenderer` rectangle drawn once in `Awake()` (bounds are static, so no per-frame redraw) - this is what's actually visible during play, in the Game view and in builds.
+  - `OnDrawGizmos()` still there too, for seeing the boundary in the Scene view while editing without pressing Play.
+- **MapTilemaps**: just holds references to the Floor and Blood Tilemaps for later systems to use. No logic - blood/cleanup isn't implemented yet, this just reserves the layer.
+- Floor tiles are hand-painted with Unity's built-in Tile Palette - no code needed for that part, see Setup.md.
 
 ## Menu & character creation (MainMenu scene)
 - **CharacterProfile**: static holder - body, head, hair, skinTone, hairColor, selectedClass. Lives in memory for the session, survives the scene load into Game since it's just a static class.
@@ -73,6 +82,8 @@ RimWorld-style: `Def` (base ScriptableObject) has defName, displayName, descript
 ## Prefabs / scene objects
 - **Player** (Game scene): Rigidbody2D (Kinematic, gravity 0) + PlayerEntity + PlayerController (cooldownUI assigned) + PlayerAppearanceController + WeaponInventory + WeaponInputController. Child with HumanoidBodyDrawer and its 5 SpriteRenderers (Body, BodyClothing, Head, Hair, HeadClothing). Separate child `WeaponAnchor` with SpriteRenderer + WeaponHolder (player = the root transform).
 - **Main Camera** (Game scene): CameraController, target = Player.
+- **Map** (Game scene): MapManager + LineRenderer (auto-added), mapDef assigned.
+- **Grid** (Game scene): Grid component + child Tilemaps "Floor" and "Blood". Optionally a MapTilemaps component with both assigned.
 - **CharacterPreview** (MainMenu scene): HumanoidBodyDrawer (same 5-renderer setup) + Collider2D + CharacterPreviewDisplay + PlayerAppearanceController.
 - **ClassItemPrefab**: Button + TMP_Text + ClassListItemButton, instantiated into the class scrollview.
 - **DefListItemButton prefab**: Button + 3 Images (N/E/S) + TMP_Text, reused for Hair/Body/Face tabs.
@@ -85,7 +96,7 @@ Body, head, hair, skin tone, and hair color are saved permanently via PlayerPref
 
 ## Scenes
 - **MainMenu**: class select, character preview, character editor.
-- **Game**: player, camera, weapon holding/HUD, dash. Still no enemies.
+- **Game**: player, camera, weapon holding/HUD, dash, map boundary + floor tiles. Still no enemies.
 
 See Setup.md for wiring steps (only for what's new/changed in the latest patch - older wiring isn't repeated once it's done).
 
@@ -95,4 +106,5 @@ See Setup.md for wiring steps (only for what's new/changed in the latest patch -
 - Skin tone / hair color tinting is a color set, not a shader - free.
 - List filtering (search bars) only runs on text change, not per-frame.
 - Weapon holding / camera follow / dash are plain per-frame math, no allocations, no GetComponent in Update.
+- Map border is drawn once (bounds are static, no reason to redraw every frame).
 - No code comments — documentation lives here instead.
