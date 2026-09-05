@@ -17,6 +17,6 @@ MonoBehaviour:
   description: 
   type: 0
   sprite: {fileID: 6108012597462862368, guid: 0540c440d2858b645accb2810b700f30, type: 3}
-  spriteAngleOffset: 0
+  spriteAngleOffset: 45
   defaultSize: 1.5
   swingType: 2
