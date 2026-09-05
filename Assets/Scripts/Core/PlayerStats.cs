@@ -14,5 +14,7 @@ namespace RogueRealms
         public float dashCooldown = 5f;
         public float dashDistance = 3f;
         public float dashDuration = 0.15f;
+
+        public float weaponSizeMultiplier = 1f;
     }
 }

@@ -38,7 +38,8 @@ namespace RogueRealms
         {
             if (isDashing)
             {
-                rb.MovePosition(rb.position + dashVelocity * Time.fixedDeltaTime);
+                Vector2 target = rb.position + dashVelocity * Time.fixedDeltaTime;
+                rb.MovePosition(MapManager.Clamp(target));
                 return;
             }
 

@@ -5,6 +5,8 @@ namespace RogueRealms
     [RequireComponent(typeof(LineRenderer))]
     public class MapManager : MonoBehaviour
     {
+        public static MapManager Instance { get; private set; }
+
         public MapDef mapDef;
         public Vector2 origin = Vector2.zero;
         public Color borderColor = Color.red;
@@ -18,8 +20,19 @@ namespace RogueRealms
 
         public bool Contains(Vector2 worldPos) => GetBounds().Contains(worldPos);
 
+        public static Vector2 Clamp(Vector2 pos)
+        {
+            if (Instance == null) return pos;
+
+            Bounds b = Instance.GetBounds();
+            pos.x = Mathf.Clamp(pos.x, b.min.x, b.max.x);
+            pos.y = Mathf.Clamp(pos.y, b.min.y, b.max.y);
+            return pos;
+        }
+
         void Awake()
         {
+            Instance = this;
             line = GetComponent<LineRenderer>();
             DrawBorder();
         }

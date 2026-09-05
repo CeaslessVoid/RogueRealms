@@ -27,7 +27,8 @@ namespace RogueRealms
         public virtual void Move(Vector2 dir)
         {
             if (dir.sqrMagnitude > 1f) dir.Normalize();
-            rb.MovePosition(rb.position + dir * BaseStats.CurrentMoveSpeed * Time.fixedDeltaTime);
+            Vector2 target = rb.position + dir * BaseStats.CurrentMoveSpeed * Time.fixedDeltaTime;
+            rb.MovePosition(MapManager.Clamp(target));
         }
 
         public virtual void SetFacing(Direction dir)

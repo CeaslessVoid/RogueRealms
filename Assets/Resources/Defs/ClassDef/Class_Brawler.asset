@@ -26,8 +26,14 @@ MonoBehaviour:
     defense: 0
     critChance: 0
     dodge: 0
+    dashCooldown: 5
+    dashDistance: 3
+    dashDuration: 0.15
+    weaponSizeMultiplier: 1
   passives: []
   skills: []
   defaultClothing: []
   startingWeapons:
   - {fileID: 11400000, guid: 582b180f378bb3942bf2cc7e0ad7f85a, type: 2}
+  - {fileID: 11400000, guid: 56c68be6bba837d4bb626ba31dd34de0, type: 2}
+  - {fileID: 11400000, guid: aeb86866deba9eb4d8050d8b17fb1b90, type: 2}
